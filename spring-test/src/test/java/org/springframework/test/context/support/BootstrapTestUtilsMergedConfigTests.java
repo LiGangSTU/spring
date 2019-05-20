@@ -21,6 +21,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+import org.assertj.core.api.AssertionsForClassTypes;
 import org.junit.Test;
 
 import org.springframework.test.context.BootstrapTestUtils;
@@ -189,6 +190,112 @@ public class BootstrapTestUtilsMergedConfigTests extends AbstractContextConfigur
 		Class<?> testClass = OverriddenClassesBar.class;
 		Class<?>[] expectedClasses = array(BarConfig.class);
 		MergedContextConfiguration mergedConfig = buildMergedContextConfiguration(testClass);
+
+		assertMergedConfig(mergedConfig, testClass, EMPTY_STRING_ARRAY, expectedClasses,
+			AnnotationConfigContextLoader.class);
+	}
+
+	/**
+	 * @since 5.2
+	 */
+	@Test
+	public void buildMergedConfigForNestedTestClassWithInheritedConfig() {
+		Class<?> testClass = OuterTestCase.NestedTestCaseWithInheritedConfig.class;
+		Class<?>[] expectedClasses = array(FooConfig.class);
+		MergedContextConfiguration mergedConfig = buildMergedContextConfiguration(testClass);
+
+		assertMergedConfig(mergedConfig, testClass, EMPTY_STRING_ARRAY, expectedClasses,
+			AnnotationConfigContextLoader.class);
+	}
+
+	/**
+	 * @since 5.2
+	 */
+	@Test
+	public void buildMergedConfigForNestedTestClassWithMergedInheritedConfig() {
+		Class<?> testClass = OuterTestCase.NestedTestCaseWithMergedInheritedConfig.class;
+		Class<?>[] expectedClasses = array(FooConfig.class, BarConfig.class);
+		MergedContextConfiguration mergedConfig = buildMergedContextConfiguration(testClass);
+
+		assertMergedConfig(mergedConfig, testClass, EMPTY_STRING_ARRAY, expectedClasses,
+			AnnotationConfigContextLoader.class);
+	}
+
+	/**
+	 * @since 5.2
+	 */
+	@Test
+	public void buildMergedConfigForNestedTestClassWithOverriddenConfig() {
+		Class<?> testClass = OuterTestCase.NestedTestCaseWithOverriddenConfig.class;
+		Class<?>[] expectedClasses = array(BarConfig.class);
+		MergedContextConfiguration mergedConfig = buildMergedContextConfiguration(testClass);
+
+		assertMergedConfig(mergedConfig, testClass, EMPTY_STRING_ARRAY, expectedClasses,
+			AnnotationConfigContextLoader.class);
+	}
+
+	/**
+	 * @since 5.2
+	 */
+	@Test
+	public void buildMergedConfigForContextHierarchy() {
+		Class<?> testClass = ContextHierarchyOuterTestCase.class;
+		Class<?>[] expectedClasses = array(BarConfig.class);
+
+		MergedContextConfiguration mergedConfig = buildMergedContextConfiguration(testClass);
+		assertThat(mergedConfig).as("merged config").isNotNull();
+
+		MergedContextConfiguration parent = mergedConfig.getParent();
+		assertThat(parent).as("parent config").isNotNull();
+		// The following does not work -- at least not in Eclipse.
+		// asssertThat(parent.getClasses())...
+		// So we use AssertionsForClassTypes directly.
+		AssertionsForClassTypes.assertThat(parent.getClasses()).containsExactly(FooConfig.class);
+
+		assertMergedConfig(mergedConfig, testClass, EMPTY_STRING_ARRAY, expectedClasses,
+			AnnotationConfigContextLoader.class);
+	}
+
+	/**
+	 * @since 5.2
+	 */
+	@Test
+	public void buildMergedConfigForNestedTestClassWithInheritedConfigForContextHierarchy() {
+		Class<?> enclosingTestClass = ContextHierarchyOuterTestCase.class;
+		Class<?> testClass = ContextHierarchyOuterTestCase.NestedTestCaseWithInheritedConfig.class;
+		Class<?>[] expectedClasses = array(BarConfig.class);
+
+		MergedContextConfiguration mergedConfig = buildMergedContextConfiguration(testClass);
+		assertThat(mergedConfig).as("merged config").isNotNull();
+
+		MergedContextConfiguration parent = mergedConfig.getParent();
+		assertThat(parent).as("parent config").isNotNull();
+		// The following does not work -- at least not in Eclipse.
+		// asssertThat(parent.getClasses())...
+		// So we use AssertionsForClassTypes directly.
+		AssertionsForClassTypes.assertThat(parent.getClasses()).containsExactly(FooConfig.class);
+
+		assertMergedConfig(mergedConfig, enclosingTestClass, EMPTY_STRING_ARRAY, expectedClasses,
+			AnnotationConfigContextLoader.class);
+	}
+
+	/**
+	 * @since 5.2
+	 */
+	@Test
+	public void buildMergedConfigForNestedTestClassWithMergedInheritedConfigForContextHierarchy() {
+		Class<?> testClass = ContextHierarchyOuterTestCase.NestedTestCaseWithMergedInheritedConfig.class;
+		Class<?>[] expectedClasses = array(BarConfig.class, BazConfig.class);
+
+		MergedContextConfiguration mergedConfig = buildMergedContextConfiguration(testClass);
+		assertThat(mergedConfig).as("merged config").isNotNull();
+
+		MergedContextConfiguration parent = mergedConfig.getParent();
+		assertThat(parent).as("parent config").isNotNull();
+		// The following does not work -- at least not in Eclipse.
+		// asssertThat(parent.getClasses())...
+		// So we use AssertionsForClassTypes directly.
+		AssertionsForClassTypes.assertThat(parent.getClasses()).containsExactly(FooConfig.class);
 
 		assertMergedConfig(mergedConfig, testClass, EMPTY_STRING_ARRAY, expectedClasses,
 			AnnotationConfigContextLoader.class);
